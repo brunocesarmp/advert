@@ -8,6 +8,7 @@ import lombok.Data;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static java.time.OffsetDateTime.now;
 import static java.util.Objects.isNull;
@@ -62,6 +63,17 @@ public class Advert {
     @PreUpdate
     public void preUpdate() {
         updatedAt = now();
+    }
+
+    public void addImageLink(String imageLink) {
+        if (Objects.isNull(imageLink) || imageLink.isBlank()) {
+            return;
+        }
+        imageLinks.add(imageLink);
+    }
+
+    public int totalImageLinkRegistered() {
+        return imageLinks.size();
     }
 
 }

@@ -1,9 +1,11 @@
 package dev.brunocesar.imovelsimplificado.advert.config;
 
+import dev.brunocesar.imovelsimplificado.advert.config.properties.AwsConfigProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
-import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.sqs.SqsClient;
@@ -11,13 +13,20 @@ import software.amazon.awssdk.services.sqs.SqsClient;
 @Configuration
 public class AwsConfig {
 
-    @Bean
-    public AwsCredentialsProvider awsCredentialsProvider() {
-        return DefaultCredentialsProvider.create();
+    private final AwsConfigProperties awsConfigProperties;
+
+    public AwsConfig(AwsConfigProperties awsConfigProperties) {
+        this.awsConfigProperties = awsConfigProperties;
     }
 
     @Bean
-    public S3Client s3AsyncClient(AwsCredentialsProvider awsCredentialsProvider) {
+    public AwsCredentialsProvider awsCredentialsProvider() {
+        var credentials = AwsBasicCredentials.create(awsConfigProperties.accessKey(), awsConfigProperties.secretAccess());
+        return StaticCredentialsProvider.create(credentials);
+    }
+
+    @Bean
+    public S3Client s3Client(AwsCredentialsProvider awsCredentialsProvider) {
         return S3Client.builder()
                 .region(Region.US_EAST_1)
                 .credentialsProvider(awsCredentialsProvider)
@@ -25,7 +34,7 @@ public class AwsConfig {
     }
 
     @Bean
-    public SqsClient sqsAsyncClient(AwsCredentialsProvider awsCredentialsProvider) {
+    public SqsClient sqsClient(AwsCredentialsProvider awsCredentialsProvider) {
         return SqsClient.builder()
                 .region(Region.US_EAST_1)
                 .credentialsProvider(awsCredentialsProvider)

@@ -1,6 +1,8 @@
 package dev.brunocesar.imovelsimplificado.advert.controllers.handler;
 
 import dev.brunocesar.imovelsimplificado.advert.exceptions.ApplicationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -14,11 +16,14 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class ControllerExceptionHandler {
 
+    private static final Logger LOG = LoggerFactory.getLogger(ControllerExceptionHandler.class);
+
     @ExceptionHandler
     public ResponseEntity<ApplicationErrorResponse> handleApplicationException(ApplicationException ex) {
         var response = new ApplicationErrorResponse();
         response.setHttpStatus(ex.getHttpStatus());
         response.setErrorMessage(List.of(ex.getMessage()));
+        LOG.error("Erro: [{}].", ex.getMessage(), ex);
         return ResponseEntity.status(response.getHttpStatus()).body(response);
     }
 
