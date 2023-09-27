@@ -1,5 +1,6 @@
 package dev.brunocesar.imovelsimplificado.advert.services;
 
+import dev.brunocesar.imovelsimplificado.advert.controllers.requests.AdvertInterestRequest;
 import dev.brunocesar.imovelsimplificado.advert.controllers.requests.AdvertRequest;
 import dev.brunocesar.imovelsimplificado.advert.controllers.responses.AdvertResponse;
 import dev.brunocesar.imovelsimplificado.advert.domains.entity.Advert;
@@ -14,20 +15,29 @@ import dev.brunocesar.imovelsimplificado.advert.gateway.response.AdvertiseRespon
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
 public class AdvertService {
 
+    private static final int TOTAL_ADVERT_IMAGES_ALLOWED = 5;
+
     private final AdvertRepository repository;
     private final AdvertiseHttpGateway advertiseHttpGateway;
+    private final AwsS3Service awsS3Service;
+    private final AwsSqsService awsSqsService;
 
     public AdvertService(AdvertRepository repository,
-                         AdvertiseHttpGateway advertiseHttpGateway) {
+                         AdvertiseHttpGateway advertiseHttpGateway,
+                         AwsS3Service awsS3Service, AwsSqsService awsSqsService) {
         this.repository = repository;
         this.advertiseHttpGateway = advertiseHttpGateway;
+        this.awsS3Service = awsS3Service;
+        this.awsSqsService = awsSqsService;
     }
 
     @Transactional
@@ -56,13 +66,13 @@ public class AdvertService {
     }
 
     public AdvertResponse get(String uuid) {
-        var entity = findEntityByUuid(uuid);
+        var entity = findAdvertByUuid(uuid);
         return convertToResponse(entity);
     }
 
     @Transactional
     public AdvertResponse update(String uuid, AdvertRequest request) {
-        var entity = findEntityByUuid(uuid);
+        var entity = findAdvertByUuid(uuid);
         if (!isAdvertiseOwnerOfAdvert(request, entity)) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST.value(), "Somente o dono do anúncio pode alterar o mesmo");
         }
@@ -71,8 +81,26 @@ public class AdvertService {
         return convertToResponse(entity);
     }
 
-    private boolean isAdvertiseOwnerOfAdvert(AdvertRequest request, Advert entity) {
-        return request.getAdvertiseUuid().equalsIgnoreCase(entity.getAdvertise().getUuid());
+    @Transactional
+    public String uploadImage(String advertUuid, MultipartFile file) {
+        var advert = findAdvertByUuid(advertUuid);
+        validateUpload(file, advert);
+        var nextImageNumber = advert.totalImageLinkRegistered() + 1;
+        var url = awsS3Service.uploadImage(file, advertUuid, nextImageNumber);
+        advert.addImageLink(url);
+        return (url);
+    }
+
+    private void validateUpload(MultipartFile file, Advert advert) {
+        if (Objects.isNull(file.getOriginalFilename())
+                && !(file.getOriginalFilename().endsWith(".jpg")
+                || file.getOriginalFilename().endsWith(".jpeg")
+                || file.getOriginalFilename().endsWith(".png"))) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST.value(), "Arquivo para upload precisa ser .jpg, .jpeg ou .png");
+        }
+        if (advert.totalImageLinkRegistered() >= TOTAL_ADVERT_IMAGES_ALLOWED) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST.value(), "Limite de 5 imagens por anúncio excedido");
+        }
     }
 
     @Transactional
@@ -81,7 +109,15 @@ public class AdvertService {
                 .ifPresent(repository::delete);
     }
 
-    private Advert findEntityByUuid(String uuid) {
+    public void sendAdvertInterestEmail(AdvertInterestRequest request) {
+        awsSqsService.sendToAdvertInterestEmailQueue(request);
+    }
+
+    private boolean isAdvertiseOwnerOfAdvert(AdvertRequest request, Advert entity) {
+        return request.getAdvertiseUuid().equalsIgnoreCase(entity.getAdvertise().getUuid());
+    }
+
+    private Advert findAdvertByUuid(String uuid) {
         return repository.findById(uuid)
                 .orElseThrow(() -> new AdvertNotFoundException(uuid));
     }

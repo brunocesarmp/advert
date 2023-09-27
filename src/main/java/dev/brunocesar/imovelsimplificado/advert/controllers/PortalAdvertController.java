@@ -6,8 +6,10 @@ import dev.brunocesar.imovelsimplificado.advert.services.AdvertService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("portal/advert")
@@ -20,6 +22,7 @@ public class PortalAdvertController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public AdvertResponse save(@RequestBody @Valid AdvertRequest request) {
         return service.save(request);
     }
@@ -44,5 +47,13 @@ public class PortalAdvertController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable String uuid) {
         service.delete(uuid);
+    }
+
+    @PostMapping("{uuid}/image/upload")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Map<String, String> uploadImage(@PathVariable("uuid") String advertUuid,
+                                           @RequestParam("file") MultipartFile file) {
+        var imageLink = service.uploadImage(advertUuid, file);
+        return Map.of("url", imageLink);
     }
 }

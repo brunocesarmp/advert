@@ -30,7 +30,7 @@ public class AdvertiseHttpGateway {
         } catch (HttpClientErrorException.NotFound ex) {
             throw new AdvertiseNotFoundException(advertiseUuid);
         } catch (Exception ex) {
-            throw new ApplicationException(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Erro interno, contate o administrador");
+            throw new ApplicationException(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Erro interno, contate o administrador", ex);
         }
     }
 }
