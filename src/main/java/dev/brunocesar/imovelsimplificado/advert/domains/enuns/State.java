@@ -4,6 +4,7 @@ import dev.brunocesar.imovelsimplificado.advert.exceptions.StateNotFoundExceptio
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public enum State {
@@ -11,7 +12,7 @@ public enum State {
     SP,
     MG;
 
-    private static final List<String> STATES_NAMES;
+    public static final List<String> STATES_NAMES;
 
     static {
         STATES_NAMES = Arrays.stream(State.values())
@@ -19,10 +20,9 @@ public enum State {
                 .collect(Collectors.toList());
     }
 
-    public static State toEnum(String value) {
+    public static Optional<State> toEnum(String value) {
         return Arrays.stream(State.values())
                 .filter(at -> at.name().equalsIgnoreCase(value))
-                .findFirst()
-                .orElseThrow(() -> new StateNotFoundException(value, STATES_NAMES));
+                .findFirst();
     }
 }
