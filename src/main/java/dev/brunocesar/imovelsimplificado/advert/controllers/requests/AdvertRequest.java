@@ -17,9 +17,6 @@ public class AdvertRequest {
     @Size(min = 3, max = 150, message = "Descrição deve possuir entre {min} e {max} caracteres")
     private String description;
 
-    @NotBlank(message = "Código do anunciante deve ser informado")
-    private String advertiseUuid;
-
     @NotBlank(message = "Estado do anúncio deve ser informado")
     private String state;
 
