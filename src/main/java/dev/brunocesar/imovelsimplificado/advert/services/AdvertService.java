@@ -123,7 +123,8 @@ public class AdvertService {
         repository.delete(entity);
     }
 
-    public void sendAdvertInterestEmail(AdvertInterestRequest request) {
+    public void sendAdvertInterestEmail(String advertUuid, AdvertInterestRequest request) {
+        findAdvertByUuid(advertUuid);
         awsSqsService.sendToAdvertInterestEmailQueue(request);
     }
 
