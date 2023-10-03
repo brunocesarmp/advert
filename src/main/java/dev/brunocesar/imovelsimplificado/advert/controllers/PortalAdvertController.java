@@ -23,37 +23,42 @@ public class PortalAdvertController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public AdvertResponse save(@RequestBody @Valid AdvertRequest request) {
-        return service.save(request);
+    public AdvertResponse save(@RequestBody @Valid AdvertRequest request,
+                               @RequestHeader("Authorization") String advertiseToken) {
+        return service.save(request, advertiseToken);
     }
 
-    @GetMapping("advertise/{advertiseUuid}")
-    public List<AdvertResponse> listByAdvertiseUuid(@PathVariable String advertiseUuid) {
-        return service.listByAdvertiseUuid(advertiseUuid);
+    @GetMapping
+    public List<AdvertResponse> listByAdvertise(@RequestHeader("Authorization") String advertiseToken) {
+        return service.listByAdvertise(advertiseToken);
     }
 
     @GetMapping("{uuid}")
-    public AdvertResponse get(@PathVariable String uuid) {
-        return service.get(uuid);
+    public AdvertResponse get(@PathVariable String uuid,
+                              @RequestHeader("Authorization") String advertiseToken) {
+        return service.get(uuid, advertiseToken);
     }
 
     @PutMapping("{uuid}")
     public AdvertResponse update(@PathVariable String uuid,
-                                 @RequestBody @Valid AdvertRequest request) {
-        return service.update(uuid, request);
+                                 @RequestBody @Valid AdvertRequest request,
+                                 @RequestHeader("Authorization") String advertiseToken) {
+        return service.update(uuid, request, advertiseToken);
     }
 
     @DeleteMapping("{uuid}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable String uuid) {
-        service.delete(uuid);
+    public void delete(@PathVariable String uuid,
+                       @RequestHeader("Authorization") String advertiseToken) {
+        service.delete(uuid, advertiseToken);
     }
 
     @PostMapping("{uuid}/image/upload")
     @ResponseStatus(HttpStatus.CREATED)
     public Map<String, String> uploadImage(@PathVariable("uuid") String advertUuid,
+                                           @RequestHeader("Authorization") String advertiseToken,
                                            @RequestParam("file") MultipartFile file) {
-        var imageLink = service.uploadImage(advertUuid, file);
+        var imageLink = service.uploadImage(advertUuid, advertiseToken, file);
         return Map.of("url", imageLink);
     }
 }
