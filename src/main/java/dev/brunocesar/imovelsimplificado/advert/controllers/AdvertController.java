@@ -20,7 +20,7 @@ public class AdvertController {
     @PostMapping("{advertUuid}/send-interest")
     public Map<String, Object> sendInterest(@PathVariable String advertUuid,
                                             @RequestBody @Valid AdvertInterestRequest request) {
-        advertService.sendAdvertInterestEmail(request);
+        advertService.sendAdvertInterestEmail(advertUuid, request);
         return Map.of("message", "Interesse pelo anúncio recebido. Em breve o anunciante entrará em contato!");
     }
 
