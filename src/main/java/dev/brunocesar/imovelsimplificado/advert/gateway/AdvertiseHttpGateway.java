@@ -1,9 +1,11 @@
 package dev.brunocesar.imovelsimplificado.advert.gateway;
 
 import dev.brunocesar.imovelsimplificado.advert.config.properties.AdvertiseConfigProperties;
-import dev.brunocesar.imovelsimplificado.advert.exceptions.AdvertiseNotFoundException;
 import dev.brunocesar.imovelsimplificado.advert.exceptions.ApplicationException;
 import dev.brunocesar.imovelsimplificado.advert.gateway.response.AdvertiseResponse;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
@@ -23,14 +25,20 @@ public class AdvertiseHttpGateway {
         this.host = advertiseConfigProperties.host();
     }
 
-    public AdvertiseResponse getAdvertiseByUuid(String advertiseUuid) {
+    public AdvertiseResponse getAdvertise(String bearerToken) {
         try {
-            var uri = host.concat(GET_ADVERTISE_URI).concat("/" + advertiseUuid);
-            return restTemplate.getForObject(uri, AdvertiseResponse.class);
-        } catch (HttpClientErrorException.NotFound ex) {
-            throw new AdvertiseNotFoundException(advertiseUuid);
+            var url = host.concat(GET_ADVERTISE_URI).concat("/me");
+
+            var headers = new HttpHeaders();
+            headers.set("Authorization", bearerToken);
+
+            var httpEntity = new HttpEntity<>(headers);
+
+            return restTemplate.exchange(url, HttpMethod.GET, httpEntity, AdvertiseResponse.class).getBody();
+        } catch (HttpClientErrorException.Unauthorized ex) {
+            throw new ApplicationException(HttpStatus.UNAUTHORIZED.value(), "Acesso negado. Você deve estar autenticado no sistema para acessar a URL solicitada.", ex);
         } catch (Exception ex) {
-            throw new ApplicationException(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Erro interno, contate o administrador", ex);
+            throw new ApplicationException(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Erro interno, contate o administrador.", ex);
         }
     }
 }
