@@ -145,11 +145,9 @@ public class AdvertService {
 
     public Page<Advert> list(String state, AdvertType type, PageRequest pageRequest) {
         var stateOpt = State.toEnum(state);
-        if (stateOpt.isPresent()) {
-            return repository.findAllByStateAndType(stateOpt.get(), type, pageRequest);
-        } else {
-            return repository.findAllByType(type, pageRequest);
-        }
+        return stateOpt.isPresent()
+                ? repository.findAllByStateAndType(stateOpt.get(), type, pageRequest)
+                : repository.findAllByType(type, pageRequest);
     }
 
     private boolean advertiseNotIsOwnerOfAdvert(AdvertiseResponse advertise, Advert entity) {
