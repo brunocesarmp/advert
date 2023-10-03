@@ -40,9 +40,9 @@ public class AdvertService {
         this.awsSqsService = awsSqsService;
     }
 
-    @Transactional
-    public AdvertResponse save(AdvertRequest request) {
-        var advertiseResponse = advertiseHttpGateway.getAdvertiseByUuid(request.getAdvertiseUuid());
+    @Transactional(rollbackFor = Exception.class)
+    public AdvertResponse save(AdvertRequest request, String advertiseToken) {
+        var advertiseResponse = advertiseHttpGateway.getAdvertise(advertiseToken);
         var entity = convertToEntity(request);
         var advertise = new Advertise();
         updateAdvertiseInfo(advertise, advertiseResponse);
@@ -58,22 +58,28 @@ public class AdvertService {
         advertise.setPhone(advertiseResponse.getPhone());
     }
 
-    public List<AdvertResponse> listByAdvertiseUuid(String advertiseUuid) {
-        return repository.findAllByAdvertiseUuid(advertiseUuid)
+    public List<AdvertResponse> listByAdvertise(String advertiseToken) {
+        var advertise = advertiseHttpGateway.getAdvertise(advertiseToken);
+        return repository.findAllByAdvertiseUuid(advertise.getUuid())
                 .stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
     }
 
-    public AdvertResponse get(String uuid) {
+    public AdvertResponse get(String uuid, String advertiseToken) {
+        var advertise = advertiseHttpGateway.getAdvertise(advertiseToken);
         var entity = findAdvertByUuid(uuid);
+        if (advertiseNotIsOwnerOfAdvert(advertise, entity)) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST.value(), "Somente o dono do anúncio pode buscar o mesmo pelo endpoint /portal");
+        }
         return convertToResponse(entity);
     }
 
-    @Transactional
-    public AdvertResponse update(String uuid, AdvertRequest request) {
+    @Transactional(rollbackFor = Exception.class)
+    public AdvertResponse update(String uuid, AdvertRequest request, String advertiseToken) {
+        var advertise = advertiseHttpGateway.getAdvertise(advertiseToken);
         var entity = findAdvertByUuid(uuid);
-        if (!isAdvertiseOwnerOfAdvert(request, entity)) {
+        if (advertiseNotIsOwnerOfAdvert(advertise, entity)) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST.value(), "Somente o dono do anúncio pode alterar o mesmo");
         }
         updateEntity(entity, request);
@@ -81,13 +87,17 @@ public class AdvertService {
         return convertToResponse(entity);
     }
 
-    @Transactional
-    public String uploadImage(String advertUuid, MultipartFile file) {
-        var advert = findAdvertByUuid(advertUuid);
-        validateUpload(file, advert);
-        var nextImageNumber = advert.totalImageLinkRegistered() + 1;
+    @Transactional(rollbackFor = Exception.class)
+    public String uploadImage(String advertUuid, String advertiseToken, MultipartFile file) {
+        var advertise = advertiseHttpGateway.getAdvertise(advertiseToken);
+        var entity = findAdvertByUuid(advertUuid);
+        if (advertiseNotIsOwnerOfAdvert(advertise, entity)) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST.value(), "Somente o dono do anúncio fazer upload de imagens do mesmo");
+        }
+        validateUpload(file, entity);
+        var nextImageNumber = entity.totalImageLinkRegistered() + 1;
         var url = awsS3Service.uploadImage(file, advertUuid, nextImageNumber);
-        advert.addImageLink(url);
+        entity.addImageLink(url);
         return (url);
     }
 
@@ -103,18 +113,22 @@ public class AdvertService {
         }
     }
 
-    @Transactional
-    public void delete(String uuid) {
-        repository.findById(uuid)
-                .ifPresent(repository::delete);
+    @Transactional(rollbackFor = Exception.class)
+    public void delete(String uuid, String advertiseToken) {
+        var advertise = advertiseHttpGateway.getAdvertise(advertiseToken);
+        var entity = findAdvertByUuid(uuid);
+        if (advertiseNotIsOwnerOfAdvert(advertise, entity)) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST.value(), "Somente o dono do anúncio fazer deletar o mesmo");
+        }
+        repository.delete(entity);
     }
 
     public void sendAdvertInterestEmail(AdvertInterestRequest request) {
         awsSqsService.sendToAdvertInterestEmailQueue(request);
     }
 
-    private boolean isAdvertiseOwnerOfAdvert(AdvertRequest request, Advert entity) {
-        return request.getAdvertiseUuid().equalsIgnoreCase(entity.getAdvertise().getUuid());
+    private boolean advertiseNotIsOwnerOfAdvert(AdvertiseResponse advertise, Advert entity) {
+        return !advertise.getUuid().equalsIgnoreCase(entity.getAdvertise().getUuid());
     }
 
     private Advert findAdvertByUuid(String uuid) {
