@@ -9,9 +9,13 @@ import dev.brunocesar.imovelsimplificado.advert.domains.enuns.AdvertType;
 import dev.brunocesar.imovelsimplificado.advert.domains.enuns.State;
 import dev.brunocesar.imovelsimplificado.advert.domains.repository.AdvertRepository;
 import dev.brunocesar.imovelsimplificado.advert.exceptions.AdvertNotFoundException;
+import dev.brunocesar.imovelsimplificado.advert.exceptions.AdvertTypeNotFoundException;
 import dev.brunocesar.imovelsimplificado.advert.exceptions.ApplicationException;
+import dev.brunocesar.imovelsimplificado.advert.exceptions.StateNotFoundException;
 import dev.brunocesar.imovelsimplificado.advert.gateway.AdvertiseHttpGateway;
 import dev.brunocesar.imovelsimplificado.advert.gateway.response.AdvertiseResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +24,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import static dev.brunocesar.imovelsimplificado.advert.domains.enuns.AdvertType.ADVERT_TYPE_NAMES;
+import static dev.brunocesar.imovelsimplificado.advert.domains.enuns.State.STATES_NAMES;
 
 @Service
 public class AdvertService {
@@ -128,6 +135,23 @@ public class AdvertService {
         awsSqsService.sendToAdvertInterestEmailQueue(request);
     }
 
+    public Page<Advert> listLeases(String state, PageRequest pageRequest) {
+        return list(state, AdvertType.LEASE, pageRequest);
+    }
+
+    public Page<Advert> listSales(String state, PageRequest pageRequest) {
+        return list(state, AdvertType.SALE, pageRequest);
+    }
+
+    public Page<Advert> list(String state, AdvertType type, PageRequest pageRequest) {
+        var stateOpt = State.toEnum(state);
+        if (stateOpt.isPresent()) {
+            return repository.findAllByStateAndType(stateOpt.get(), type, pageRequest);
+        } else {
+            return repository.findAllByType(type, pageRequest);
+        }
+    }
+
     private boolean advertiseNotIsOwnerOfAdvert(AdvertiseResponse advertise, Advert entity) {
         return !advertise.getUuid().equalsIgnoreCase(entity.getAdvertise().getUuid());
     }
@@ -146,8 +170,8 @@ public class AdvertService {
     private void updateEntity(Advert entity, AdvertRequest request) {
         entity.setTitle(request.getTitle());
         entity.setDescription(request.getDescription());
-        entity.setType(AdvertType.toEnum(request.getType()));
-        entity.setState(State.toEnum(request.getState()));
+        entity.setType(AdvertType.toEnum(request.getType()).orElseThrow(() -> new AdvertTypeNotFoundException(request.getType(), ADVERT_TYPE_NAMES)));
+        entity.setState(State.toEnum(request.getState()).orElseThrow(() -> new StateNotFoundException(request.getState(), STATES_NAMES)));
         entity.setValue(request.getValue());
     }
 
