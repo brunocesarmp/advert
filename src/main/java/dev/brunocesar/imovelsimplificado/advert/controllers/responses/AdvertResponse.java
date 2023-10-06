@@ -15,14 +15,14 @@ public class AdvertResponse {
     private OffsetDateTime updatedAt;
     private String title;
     private String description;
-    private Advertise advertise;
-    private List<String> imageLinks;
+    private AdvertAdvertiseResponse advertise;
+    private List<UploadImageResponse> imageLinks;
     private State state;
     private Double value;
     private AdvertType type;
 
     @Data
-    public static class Advertise {
+    public static class AdvertAdvertiseResponse {
         private String uuid;
         private String name;
         private String email;

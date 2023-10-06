@@ -3,6 +3,7 @@ package dev.brunocesar.imovelsimplificado.advert.services;
 import dev.brunocesar.imovelsimplificado.advert.controllers.requests.AdvertInterestRequest;
 import dev.brunocesar.imovelsimplificado.advert.controllers.requests.AdvertRequest;
 import dev.brunocesar.imovelsimplificado.advert.controllers.responses.AdvertResponse;
+import dev.brunocesar.imovelsimplificado.advert.controllers.responses.UploadImageResponse;
 import dev.brunocesar.imovelsimplificado.advert.domains.entity.Advert;
 import dev.brunocesar.imovelsimplificado.advert.domains.entity.Advertise;
 import dev.brunocesar.imovelsimplificado.advert.domains.enuns.AdvertType;
@@ -22,16 +23,16 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static dev.brunocesar.imovelsimplificado.advert.domains.enuns.AdvertType.ADVERT_TYPE_NAMES;
 import static dev.brunocesar.imovelsimplificado.advert.domains.enuns.State.STATES_NAMES;
+import static java.util.Objects.isNull;
 
 @Service
 public class AdvertService {
 
-    private static final int TOTAL_ADVERT_IMAGES_ALLOWED = 5;
+    private static final int TOTAL_ADVERT_IMAGES_ALLOWED = 4;
 
     private final AdvertRepository repository;
     private final AdvertiseHttpGateway advertiseHttpGateway;
@@ -105,18 +106,16 @@ public class AdvertService {
         var nextImageNumber = entity.totalImageLinkRegistered() + 1;
         var url = awsS3Service.uploadImage(file, advertUuid, nextImageNumber);
         entity.addImageLink(url);
-        return (url);
+        return url;
     }
 
     private void validateUpload(MultipartFile file, Advert advert) {
-        if (Objects.isNull(file.getOriginalFilename())
-                && !(file.getOriginalFilename().endsWith(".jpg")
-                || file.getOriginalFilename().endsWith(".jpeg")
-                || file.getOriginalFilename().endsWith(".png"))) {
+        if (file.getOriginalFilename().isBlank()
+                || !(file.getOriginalFilename().endsWith(".jpg") || file.getOriginalFilename().endsWith(".jpeg") || file.getOriginalFilename().endsWith(".png"))) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST.value(), "Arquivo para upload precisa ser .jpg, .jpeg ou .png");
         }
         if (advert.totalImageLinkRegistered() >= TOTAL_ADVERT_IMAGES_ALLOWED) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST.value(), "Limite de 5 imagens por anúncio excedido");
+            throw new ApplicationException(HttpStatus.BAD_REQUEST.value(), "Limite de 4 imagens por anúncio excedido");
         }
     }
 
@@ -135,12 +134,14 @@ public class AdvertService {
         awsSqsService.sendToAdvertInterestEmailQueue(request);
     }
 
-    public Page<Advert> listLeases(String state, PageRequest pageRequest) {
-        return list(state, AdvertType.LEASE, pageRequest);
+    public Page<AdvertResponse> listLeases(String state, PageRequest pageRequest) {
+        return list(state, AdvertType.LEASE, pageRequest)
+                .map(this::convertToResponse);
     }
 
-    public Page<Advert> listSales(String state, PageRequest pageRequest) {
-        return list(state, AdvertType.SALE, pageRequest);
+    public Page<AdvertResponse> listSales(String state, PageRequest pageRequest) {
+        return list(state, AdvertType.SALE, pageRequest)
+                .map(this::convertToResponse);
     }
 
     public Page<Advert> list(String state, AdvertType type, PageRequest pageRequest) {
@@ -174,6 +175,9 @@ public class AdvertService {
     }
 
     private AdvertResponse convertToResponse(Advert entity) {
+        var imageLinks = isNull(entity.getImageLinks()) ? null : entity.getImageLinks().stream()
+                .map(UploadImageResponse::new)
+                .toList();
         var response = new AdvertResponse();
         response.setUuid(entity.getUuid());
         response.setCreatedAt(entity.getCreatedAt());
@@ -183,10 +187,10 @@ public class AdvertService {
         response.setType(entity.getType());
         response.setState(entity.getState());
         response.setValue(entity.getValue());
-        response.setImageLinks(entity.getImageLinks());
+        response.setImageLinks(imageLinks);
 
         var advertiseEntity = entity.getAdvertise();
-        var advertiseResponse = new AdvertResponse.Advertise();
+        var advertiseResponse = new AdvertResponse.AdvertAdvertiseResponse();
         advertiseResponse.setUuid(advertiseEntity.getUuid());
         advertiseResponse.setName(advertiseEntity.getName());
         advertiseResponse.setEmail(advertiseEntity.getEmail());
