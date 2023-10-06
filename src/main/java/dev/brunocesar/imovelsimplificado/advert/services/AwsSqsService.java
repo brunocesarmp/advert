@@ -19,7 +19,6 @@ public class AwsSqsService {
         this.awsConfigProperties = awsConfigProperties;
     }
 
-    @PostMapping("sqs")
     public void sendToAdvertInterestEmailQueue(AdvertInterestRequest request) {
         var message = SendMessageRequest.builder()
                 .queueUrl(awsConfigProperties.sqs().advertInterestedEmailQueue())
