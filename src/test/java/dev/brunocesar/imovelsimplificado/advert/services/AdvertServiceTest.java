@@ -3,6 +3,8 @@ package dev.brunocesar.imovelsimplificado.advert.services;
 import dev.brunocesar.imovelsimplificado.advert.controllers.requests.AdvertInterestRequest;
 import dev.brunocesar.imovelsimplificado.advert.controllers.requests.AdvertRequest;
 import dev.brunocesar.imovelsimplificado.advert.domains.entity.Advert;
+import dev.brunocesar.imovelsimplificado.advert.domains.enuns.AdvertType;
+import dev.brunocesar.imovelsimplificado.advert.domains.enuns.State;
 import dev.brunocesar.imovelsimplificado.advert.domains.repository.AdvertRepository;
 import dev.brunocesar.imovelsimplificado.advert.exceptions.AdvertNotFoundException;
 import dev.brunocesar.imovelsimplificado.advert.exceptions.AdvertTypeNotFoundException;
@@ -15,6 +17,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 
 import java.util.List;
@@ -141,6 +145,7 @@ class AdvertServiceTest {
     @Test
     public void shouldReturnAdvertWithSuccess() {
         advert.getAdvertise().setUuid(advertiseResponse.getUuid());
+        advert.setImageLinks(null);
         when(advertiseHttpGateway.getAdvertise(advertiseToken)).thenReturn(advertiseResponse);
         when(repository.findById(advert.getUuid())).thenReturn(Optional.of(advert));
 
@@ -333,5 +338,66 @@ class AdvertServiceTest {
         service.sendAdvertInterestEmail(advert.getUuid(), advertInterestRequest);
 
         verify(awsSqsService).sendToAdvertInterestEmailQueue(advertInterestRequest);
+    }
+
+
+    @Test
+    public void shouldListLeaseAdvertsWithState() {
+        var pageRequest = PageRequest.of(1, 10);
+        when(repository.findAllByStateAndType(State.SP, AdvertType.LEASE, pageRequest))
+                .thenReturn(new PageImpl<>(List.of(advert)));
+
+        var result = service.listLeases(State.SP.name(), pageRequest);
+
+        assertNotNull(result);
+        assertEquals(1L, result.getTotalElements());
+
+        verify(repository).findAllByStateAndType(State.SP, AdvertType.LEASE, pageRequest);
+        verify(repository, never()).findAllByType(any(), any());
+    }
+
+    @Test
+    public void shouldListLeaseAdvertsWithoutState() {
+        var pageRequest = PageRequest.of(1, 10);
+        when(repository.findAllByType(AdvertType.LEASE, pageRequest))
+                .thenReturn(new PageImpl<>(List.of(advert)));
+
+        var result = service.listLeases(null, pageRequest);
+
+        assertNotNull(result);
+        assertEquals(1L, result.getTotalElements());
+
+        verify(repository, never()).findAllByStateAndType(any(), any(), any());
+        verify(repository).findAllByType(AdvertType.LEASE, pageRequest);
+    }
+
+    @Test
+    public void shouldListSaleAdvertsWithState() {
+        var pageRequest = PageRequest.of(1, 10);
+        when(repository.findAllByStateAndType(State.SP, AdvertType.SALE, pageRequest))
+                .thenReturn(new PageImpl<>(List.of(advert)));
+
+        var result = service.listSales(State.SP.name(), pageRequest);
+
+        assertNotNull(result);
+        assertEquals(1L, result.getTotalElements());
+
+        verify(repository).findAllByStateAndType(State.SP, AdvertType.SALE, pageRequest);
+        verify(repository, never()).findAllByType(any(), any());
+    }
+
+    @Test
+    public void shouldListSaleAdvertsWithoutState() {
+        var pageRequest = PageRequest.of(1, 10);
+        when(repository.findAllByType(AdvertType.SALE, pageRequest))
+                .thenReturn(new PageImpl<>(List.of(advert)));
+
+        var result = service.listSales(null, pageRequest);
+
+        assertNotNull(result);
+        assertEquals(1L, result.getTotalElements());
+
+        verify(repository, never()).findAllByStateAndType(any(), any(), any());
+        verify(repository).findAllByType(AdvertType.SALE, pageRequest);
     }
 }

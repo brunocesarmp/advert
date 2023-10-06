@@ -28,6 +28,7 @@ ext {
 	set("gsonVersion", "2.10.1")
 	set("springDocVersion", "2.2.0")
 	set("mockWebServerVersion", "4.11.0")
+	set("springWebTestClientVersion", "3.0.0")
 }
 
 dependencies {
@@ -54,6 +55,7 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation "com.h2database:h2:${h2Version}"
 	testImplementation "com.squareup.okhttp3:mockwebserver:${mockWebServerVersion}"
+	testImplementation "org.springframework.restdocs:spring-restdocs-webtestclient:${springWebTestClientVersion}"
 }
 
 tasks.named('test') {
