@@ -21,4 +21,7 @@ public class AdvertInterestRequest {
     @Size(min = 10, max = 11, message = "Telefone de contato deve conter entre {min} e {max} números. Ex.: 11912345314")
     private String phone;
 
+    @Size(max = 100, message = "Descrição deve conter no máximo {max} caracteres.")
+    private String description;
+
 }
