@@ -1,6 +1,7 @@
 package dev.brunocesar.imovelsimplificado.advert.controllers.handler;
 
 import dev.brunocesar.imovelsimplificado.advert.exceptions.ApplicationException;
+import org.apache.tomcat.util.http.fileupload.impl.FileSizeLimitExceededException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -19,6 +20,14 @@ public class ControllerExceptionHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(ControllerExceptionHandler.class);
 
+    @ExceptionHandler
+    public ResponseEntity<ApplicationErrorResponse> handleFileSizeLimitExceededException(FileSizeLimitExceededException ex) {
+        var response = new ApplicationErrorResponse();
+        response.setHttpStatus(HttpStatus.BAD_REQUEST.value());
+        response.setErrorMessage(List.of("Limite de 500KB para Upload de Imagem excedido"));
+        LOG.error("Erro: [{}].", ex.getMessage(), ex);
+        return ResponseEntity.status(response.getHttpStatus()).body(response);
+    }
 
     @ExceptionHandler
     public ResponseEntity<ApplicationErrorResponse> handleApplicationException(ApplicationException ex) {
