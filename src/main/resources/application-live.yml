@@ -10,6 +10,9 @@ management:
       base-path: /
 
 spring:
+  servlet:
+    multipart:
+      max-file-size: 500KB
   jpa:
     hibernate:
       ddl-auto: update
