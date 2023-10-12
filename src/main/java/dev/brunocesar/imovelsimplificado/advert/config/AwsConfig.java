@@ -22,16 +22,9 @@ public class AwsConfig {
     }
 
     @Bean
-    @Profile("live")
     public AwsCredentialsProvider awsCredentialsProviderLive() {
         var credentials = AwsBasicCredentials.create(awsConfigProperties.accessKey(), awsConfigProperties.secretAccess());
         return StaticCredentialsProvider.create(credentials);
-    }
-
-    @Bean
-    @Profile("!live")
-    public AwsCredentialsProvider awsCredentialsProviderNotLIve() {
-        return DefaultCredentialsProvider.create();
     }
 
     @Bean
