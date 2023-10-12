@@ -3,8 +3,10 @@ package dev.brunocesar.imovelsimplificado.advert.config;
 import dev.brunocesar.imovelsimplificado.advert.config.properties.AwsConfigProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -20,9 +22,16 @@ public class AwsConfig {
     }
 
     @Bean
-    public AwsCredentialsProvider awsCredentialsProvider() {
+    @Profile("live")
+    public AwsCredentialsProvider awsCredentialsProviderLive() {
         var credentials = AwsBasicCredentials.create(awsConfigProperties.accessKey(), awsConfigProperties.secretAccess());
         return StaticCredentialsProvider.create(credentials);
+    }
+
+    @Bean
+    @Profile("!live")
+    public AwsCredentialsProvider awsCredentialsProviderNotLIve() {
+        return DefaultCredentialsProvider.create();
     }
 
     @Bean

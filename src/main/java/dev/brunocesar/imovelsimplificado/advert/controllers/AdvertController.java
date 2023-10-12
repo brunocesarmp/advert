@@ -46,6 +46,6 @@ public class AdvertController implements IAdvertController {
     public SendInterestResponse sendInterest(@PathVariable String advertUuid,
                                              @RequestBody @Valid AdvertInterestRequest request) {
         advertService.sendAdvertInterestEmail(advertUuid, request);
-        return new SendInterestResponse("Interesse pelo anúncio recebido. Em breve o anunciante entrará em contato!");
+        return new SendInterestResponse("Interesse pelo anúncio recebido. Em breve o anunciante entrará em contato! Isso é uma simulação.");
     }
 }
