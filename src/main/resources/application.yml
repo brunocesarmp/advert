@@ -28,8 +28,8 @@ advertise:
   host: http://localhost:8081/api/v1
 
 aws:
-  accessKey: "AKIA5HTIXD6EVVHR2AV4"
-  secretAccess: "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"
+  accessKey: AWS_ACCESS_KEY
+  secretAccess: AWS_SECRET_ACCESS
   sqs:
     advert-interested-email-queue: https://sqs.us-east-1.amazonaws.com/909678944137/pos_puc_advert_interested_email_queue
   s3:
