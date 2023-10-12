@@ -1,0 +1,33 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api/v1
+
+management:
+  endpoints:
+    web:
+      base-path: /
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:db;DB_CLOSE_DELAY=-1
+    username: sa
+    password: sa
+
+advertise:
+  host: http://localhost:8081/advertise-system/v1
+
+aws:
+  accessKey: AWS_ACCESS_KEY
+  secretAccess: AWS_SECRET_ACCESS
+  sqs:
+    advert-interested-email-queue: https://sqs.us-east-1.amazonaws.com/909678944137/pos_puc_advert_interested_email_queue
+  s3:
+    advert-images-bucket: pos-puc-advert-images-bucket

@@ -1,0 +1,36 @@
+server:
+  url: http://localhost:8080
+  servlet:
+    context-path: /api/v1
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      base-path: /
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: 500KB
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+  datasource:
+    url: jdbc:mysql://localhost:3306/db_advert?createDatabaseIfNotExist=true
+    username: root
+    password: root
+
+advertise:
+  host: http://localhost:8081/api/v1
+
+aws:
+  accessKey: AWS_ACCESS_KEY
+  secretAccess: AWS_SECRET_ACCESS
+  sqs:
+    advert-interested-email-queue: https://sqs.us-east-1.amazonaws.com/909678944137/pos_puc_advert_interested_email_queue
+  s3:
+    advert-images-bucket: pos-puc-advert-images-bucket
