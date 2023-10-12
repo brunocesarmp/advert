@@ -1,0 +1,512 @@
+{
+	"info": {
+		"_postman_id": "19c32b80-0d88-4d97-aa42-a0858b052438",
+		"name": "Imóvel Simplificado Software",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "29804354"
+	},
+	"item": [
+		{
+			"name": "1 - Cadastro de Anunciante",
+			"item": [
+				{
+					"name": "Criar Anunciante",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstName\": \"Primeiro Nome\",\n    \"lastName\": \"Ultimo Nome\",\n    \"email\": \"test-bc@test.com\",\n    \"phone\": \"11912341234\",\n    \"password\": \"123456\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{advertise-host}}/advertise",
+							"host": [
+								"{{advertise-host}}"
+							],
+							"path": [
+								"advertise"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Fazer Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"",
+									"    const response = JSON.parse(responseBody);",
+									"    postman.setEnvironmentVariable(\"advertise.token\", response.token);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\":\"test-bc@test.com\",\n    \"password\": \"123456\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{advertise-host}}/login",
+							"host": [
+								"{{advertise-host}}"
+							],
+							"path": [
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Buscar Anunciante",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{advertise.token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstName\": \"Bruno Teste\",\n    \"lastName\": \"Ultimo Nome\",\n    \"email\": \"bcesar.bruno@gmail.com\",\n    \"phone\": \"1194955118\",\n    \"password\": \"123456\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{advertise-host}}/advertise/me",
+							"host": [
+								"{{advertise-host}}"
+							],
+							"path": [
+								"advertise",
+								"me"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Atualizar Anunciante",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{advertise.token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstName\": \"Bruno Primeiro 2\",\n    \"lastName\": \"Ultimo Nome\",\n    \"email\": \"test-bc@test.com\",\n    \"phone\": \"11915221241\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{advertise-host}}/advertise/me",
+							"host": [
+								"{{advertise-host}}"
+							],
+							"path": [
+								"advertise",
+								"me"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2 - Cadastro de Anuncios de Imóveis",
+			"item": [
+				{
+					"name": "Criar Anúncio",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"",
+									"    const response = JSON.parse(responseBody);",
+									"    postman.setEnvironmentVariable(\"advert.uuid\", response.uuid);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{advertise.token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Titulo\",\n    \"description\": \"Descrição\",\n    \"state\": \"RJ\",\n    \"value\": 500.00,\n    \"type\": \"LEASE\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{advert-host}}/portal/advert",
+							"host": [
+								"{{advert-host}}"
+							],
+							"path": [
+								"portal",
+								"advert"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Buscar Anúncio",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{advertise.token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{advert-host}}/portal/advert/:advertUuid",
+							"host": [
+								"{{advert-host}}"
+							],
+							"path": [
+								"portal",
+								"advert",
+								":advertUuid"
+							],
+							"variable": [
+								{
+									"key": "advertUuid",
+									"value": "{{advert.uuid}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Anúncios (do Anunciante)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{advertise.token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{advert-host}}/portal/advert",
+							"host": [
+								"{{advert-host}}"
+							],
+							"path": [
+								"portal",
+								"advert"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Atualizar Anúncio",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{advertise.token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Titulo Teste 2\",\n    \"description\": \"Descrição teste 2\",\n    \"state\": \"SP\",\n    \"value\": 100.00,\n    \"type\": \"LEASE\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{advert-host}}/portal/advert/:advertUuid",
+							"host": [
+								"{{advert-host}}"
+							],
+							"path": [
+								"portal",
+								"advert",
+								":advertUuid"
+							],
+							"variable": [
+								{
+									"key": "advertUuid",
+									"value": "{{advert.uuid}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Fazer Upload Imagem do Anúncio",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{advertise.token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/home/brunocesarmp/Downloads/imagem-mais-de-500kb.jpeg"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{advert-host}}/portal/advert/:advertUuid/image/upload",
+							"host": [
+								"{{advert-host}}"
+							],
+							"path": [
+								"portal",
+								"advert",
+								":advertUuid",
+								"image",
+								"upload"
+							],
+							"variable": [
+								{
+									"key": "advertUuid",
+									"value": "{{advert.uuid}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Remover Anúncio",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{advertise.token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{advert-host}}/portal/advert/:advertUuid",
+							"host": [
+								"{{advert-host}}"
+							],
+							"path": [
+								"portal",
+								"advert",
+								":advertUuid"
+							],
+							"variable": [
+								{
+									"key": "advertUuid",
+									"value": "{{advert.uuid}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3 - Busca de Anúncios",
+			"item": [
+				{
+					"name": "Buscar imóveis para locação",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{advert-host}}/advert/lease?dir=DESC&pag=0",
+							"host": [
+								"{{advert-host}}"
+							],
+							"path": [
+								"advert",
+								"lease"
+							],
+							"query": [
+								{
+									"key": "state",
+									"value": "SP",
+									"disabled": true
+								},
+								{
+									"key": "dir",
+									"value": "DESC"
+								},
+								{
+									"key": "pag",
+									"value": "0"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Buscar imóveis à venda",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{advert-host}}/advert/sale?dir=ASC&pag=0",
+							"host": [
+								"{{advert-host}}"
+							],
+							"path": [
+								"advert",
+								"sale"
+							],
+							"query": [
+								{
+									"key": "state",
+									"value": "SP",
+									"disabled": true
+								},
+								{
+									"key": "dir",
+									"value": "ASC"
+								},
+								{
+									"key": "pag",
+									"value": "0"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Enviar Interesse por imóvel",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Bruno\",\n    \"phone\": \"11912345678\",\n    \"email\": \"teste@teste.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{advert-host}}/advert/:advertUuid/send-interest",
+							"host": [
+								"{{advert-host}}"
+							],
+							"path": [
+								"advert",
+								":advertUuid",
+								"send-interest"
+							],
+							"variable": [
+								{
+									"key": "advertUuid",
+									"value": "{{advert.uuid}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
